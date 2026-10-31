@@ -1,0 +1,21 @@
+{
+  "name": "cargo-doctor",
+  "version": "1.0.0",
+  "description": "Interactive in-browser Rust Cargo manifest linter, duplicate dependency detector, health auditor & auto-fixer.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "rust",
+    "cargo",
+    "cargo-toml",
+    "dependencies",
+    "linter",
+    "security-audit",
+    "crates-io",
+    "workspace"
+  ],
+  "author": "slopgobblercobbler <slopgobblercobbler@users.noreply.github.com>",
+  "license": "MIT"
+}

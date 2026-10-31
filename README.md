@@ -5,7 +5,12 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-> **Production-grade linter, duplicate detector, health auditor, and autofixer for Rust `Cargo.toml` manifests and multi-crate workspaces.**
+[![Live Interactive Web App](https://img.shields.io/badge/Live%20App-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://slopgobblercobbler.github.io/cargo-doctor/)
+[![Deploy Pages](https://github.com/slopgobblercobbler/cargo-doctor/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/slopgobblercobbler/cargo-doctor/actions)
+
+> **Interactive in-browser web application & production-grade linter, duplicate detector, health auditor, and autofixer for Rust `Cargo.toml` manifests and multi-crate workspaces.**
+>
+> 🌐 **Try it live in your browser:** [https://slopgobblercobbler.github.io/cargo-doctor/](https://slopgobblercobbler.github.io/cargo-doctor/)
 
 `cargo-doctor` inspects, audits, scores, and repairs `Cargo.toml` manifests across individual crates and complex multi-crate Rust workspaces. It detects duplicate and mismatched dependency versions across workspace members, warns on unsafe wildcard or unpinned git dependencies, flags outdated Rust editions, audits missing package metadata, and automatically fixes manifests in-place with zero configuration.
 

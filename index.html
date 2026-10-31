@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cargo Doctor — Rust Cargo.toml Linter & Security Auditor</title>
+  <meta name="description" content="Interactive in-browser Rust Cargo manifest linter, duplicate dependency detector, health auditor & auto-fixer.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <span>🦀</span>
+        <span>DOCTOR</span>
+      </div>
+      <div class="brand-text">
+        <h1>Cargo Doctor</h1>
+        <div class="brand-subtitle">Rust Cargo Manifest Security Auditor, Duplicate Detector &amp; Optimizer</div>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <div class="control-group">
+        <label for="preset-select">Preset:</label>
+        <select id="preset-select" aria-label="Load Predefined Cargo Manifest Architecture">
+          <option value="PRESET_STANDARD_BINARY" selected>Standard Binary (Ripgrep Lite A+)</option>
+          <option value="PRESET_WORKSPACE">Multi-Crate Workspace (Engine Mesh)</option>
+          <option value="PRESET_VULNERABLE">Vulnerable Manifest (Security Audit Target)</option>
+          <option value="PRESET_OPTIMIZED_RELEASE">Optimized Production Release (High-Throughput)</option>
+        </select>
+        <button id="btn-load-preset" class="btn btn-sm btn-primary">Load</button>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button id="btn-auto-fix" class="btn btn-sm btn-success" title="Automatically upgrade outdated edition to 2021, pin wildcards, and inject release profile">Auto-Fix</button>
+        <button id="btn-copy-toml" class="btn btn-sm">Copy TOML</button>
+        <button id="btn-download" class="btn btn-sm">Download</button>
+      </div>
+
+      <a href="https://github.com/slopgobblercobbler/cargo-doctor" target="_blank" rel="noopener noreferrer" class="btn btn-sm">
+        <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div id="alert-container" style="display: none;"></div>
+
+    <!-- Telemetry Summary Cards -->
+    <section class="telemetry-bar">
+      <div class="stat-card">
+        <div class="stat-label">Manifest Health Grade</div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <div id="stat-grade" class="score-badge score-aplus">A+</div>
+          <span id="stat-score" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);">100/100</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Dependencies</div>
+        <div id="stat-deps" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Critical Errors</div>
+        <div id="stat-errors" class="stat-value" style="color: var(--status-err);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Warnings</div>
+        <div id="stat-warnings" class="stat-value" style="color: var(--status-warn);">0</div>
+      </div>
+    </section>
+
+    <!-- Workbench Grid (Editor Left, Diagnostics Right) -->
+    <section class="workbench-grid">
+      <!-- Editor Panel -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title"><span>📝</span> Cargo.toml Manifest</span>
+          <button id="btn-clear" class="btn btn-sm">Clear</button>
+        </div>
+        <div class="editor-wrapper">
+          <textarea id="toml-input" class="toml-textarea" placeholder="Paste Cargo.toml here or drag and drop file..."></textarea>
+          <div class="preset-chips">
+            <span class="preset-label">Presets:</span>
+            <span class="chip" data-preset="PRESET_STANDARD_BINARY">Standard Binary (A+)</span>
+            <span class="chip" data-preset="PRESET_WORKSPACE">Multi-Crate Workspace</span>
+            <span class="chip" data-preset="PRESET_VULNERABLE">Vulnerable Manifest</span>
+            <span class="chip" data-preset="PRESET_OPTIMIZED_RELEASE">Optimized Release</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnostics Panel -->
+      <div class="panel-card">
+        <nav class="nav-tabs" aria-label="Diagnostics Views">
+          <button class="nav-tab active" data-target="tab-findings">🩺 Diagnostic Findings</button>
+          <button class="nav-tab" data-target="tab-deps">📦 Dependencies Breakdown</button>
+          <button class="nav-tab" data-target="tab-metadata">📋 Package Metadata</button>
+          <button class="nav-tab" data-target="tab-profile">🚀 Release Profile Optimizer</button>
+        </nav>
+
+        <!-- Tab 1: Diagnostic Findings -->
+        <div id="tab-findings" class="tab-panel active">
+          <div id="findings-list" class="issues-container"></div>
+        </div>
+
+        <!-- Tab 2: Dependencies Breakdown -->
+        <div id="tab-deps" class="tab-panel">
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Crate</th>
+                  <th>Section</th>
+                  <th>Version / Source</th>
+                  <th>Features</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="deps-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 3: Package Metadata -->
+        <div id="tab-metadata" class="tab-panel">
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+            Audits fields required for crates.io publishing, discoverability, and documentation compliance.
+          </div>
+          <div id="metadata-checklist" class="checklist-grid"></div>
+        </div>
+
+        <!-- Tab 4: Release Profile Optimizer -->
+        <div id="tab-profile" class="tab-panel">
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+            Inspects <code>[profile.release]</code> Link-Time Optimization (LTO), symbol stripping, and codegen units for maximum binary performance and minimum size.
+          </div>
+          <div id="profile-inspector"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Cargo Doctor &bull; Interactive Client-Side Rust Cargo Manifest Linter &amp; Auditor &bull; 100% In-Browser Execution
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
